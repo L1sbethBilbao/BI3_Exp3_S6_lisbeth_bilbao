@@ -1,0 +1,177 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>cl.duoc.cine</groupId>
+  <artifactId>cadenaDeCinesMagenta</artifactId>
+  <version>1.0.0</version>
+  <packaging>jar</packaging>
+
+  <name>cadenaDeCinesMagenta</name>
+  <description>Semana 6 - JDBC + DriverManager + MySQL (Cine_DB/Cartelera)</description>
+
+  <properties>
+    <maven.compiler.source>21</maven.compiler.source>
+    <maven.compiler.target>21</maven.compiler.target>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+    <!-- Libs -->
+    <mysql.connector.version>9.4.0</mysql.connector.version>
+    <junit.jupiter.version>5.10.2</junit.jupiter.version>
+    <mockito.version>5.11.0</mockito.version>
+    <assertj.version>3.26.0</assertj.version>
+    <jacoco.version>0.8.11</jacoco.version>
+
+    <!-- Surefire leerá esta propiedad; JaCoCo la rellenará en prepare-agent -->
+    <argLine></argLine>
+
+    <!-- Plugins -->
+    <maven.compiler.plugin.version>3.11.0</maven.compiler.plugin.version>
+    <maven.surefire.plugin.version>3.2.5</maven.surefire.plugin.version>
+    <exec.maven.plugin.version>3.1.0</exec.maven.plugin.version>
+  </properties>
+
+  <dependencies>
+    <!-- MySQL JDBC -->
+    <dependency>
+      <groupId>com.mysql</groupId>
+      <artifactId>mysql-connector-j</artifactId>
+      <version>${mysql.connector.version}</version>
+    </dependency>
+
+    <!-- JUnit 5 -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>${junit.jupiter.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Mockito -->
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>${mockito.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-junit-jupiter</artifactId>
+      <version>${mockito.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- AssertJ -->
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <version>${assertj.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!-- Compilador -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>${maven.compiler.plugin.version}</version>
+        <configuration>
+          <release>${maven.compiler.source}</release>
+        </configuration>
+      </plugin>
+
+      <!-- Surefire: ejecuta JUnit 5 y PROPAGA ${argLine} para JaCoCo -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${maven.surefire.plugin.version}</version>
+        <configuration>
+          <useModulePath>false</useModulePath>   <!-- Java 21 + JPMS -->
+          <argLine>${argLine}</argLine>          <!-- *** clave para JaCoCo *** -->
+        </configuration>
+      </plugin>
+
+      <!-- Exec (opcional) -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>${exec.maven.plugin.version}</version>
+        <configuration>
+          <mainClass>cl.duoc.cine.App</mainClass>
+        </configuration>
+      </plugin>
+
+      <!-- JaCoCo -->
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>${jacoco.version}</version>
+        <executions>
+          <!-- Inyecta el javaagent ANTES de los tests -->
+          <execution>
+            <id>prepare-agent</id>
+            <phase>initialize</phase>
+            <goals><goal>prepare-agent</goal></goals>
+            <configuration>
+              <propertyName>argLine</propertyName>
+              <destFile>${project.build.directory}/jacoco.exec</destFile>
+            </configuration>
+          </execution>
+
+          <!-- Genera HTML al final de verify -->
+          <execution>
+            <id>report</id>
+            <phase>verify</phase>
+            <goals><goal>report</goal></goals>
+          </execution>
+
+          <!-- Gate suave (opcional) -->
+          <execution>
+            <id>check</id>
+            <phase>verify</phase>
+            <goals><goal>check</goal></goals>
+            <configuration>
+              <rules>
+                <rule>
+                  <element>BUNDLE</element>
+                  <limits>
+                    <limit>
+                      <counter>LINE</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>0.70</minimum>
+                    </limit>
+                    <limit>
+                      <counter>BRANCH</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>0.40</minimum>
+                    </limit>
+                  </limits>
+                  <excludes>
+                    <exclude>**/Main.class</exclude>
+                    <exclude>**/ui/**</exclude>
+                    <exclude>**/dto/**</exclude>
+                    <exclude>**/config/**</exclude>
+                  </excludes>
+                </rule>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <!-- Para que también aparezca con `mvn site` -->
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>${jacoco.version}</version>
+      </plugin>
+    </plugins>
+  </reporting>
+</project>
